@@ -54,10 +54,10 @@ impl Score {
 
     fn brick_broke(&mut self) {
         self.value += 1;
-        self.high = self.high.max(self.value);
     }
 
     fn reset(&mut self) {
+        self.high = self.high.max(self.value);
         self.value = 0;
         self.hammers = 0;
         self.bricks = 0;
@@ -141,7 +141,7 @@ fn setup_fixed(
     commands
         .spawn(Collider::cuboid(450.0, 20.0))
         .insert(Object::Ground)
-        .insert(Restitution::coefficient(0.9))
+        .insert(Restitution::coefficient(0.3))
         .insert(TransformBundle::from(Transform::from_xyz(0.0, -300.0, 0.0)))
         .insert(InheritedVisibility::VISIBLE)
         .with_children(|ground| {
@@ -221,7 +221,7 @@ fn on_click(
             commands
                 .spawn(Collider::cuboid(30.0, 30.0))
                 .insert(Object::Brick)
-                .insert(Restitution::coefficient(0.9))
+                .insert(Restitution::coefficient(0.5))
                 .insert(InheritedVisibility::VISIBLE)
                 .insert(TransformBundle::from(Transform::from_xyz(
                     point.x, point.y, 0.0,
