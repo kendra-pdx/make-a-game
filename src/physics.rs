@@ -42,13 +42,6 @@ impl Texture {
     const HAMMER: Texture = Texture { path: "hammer.png" };
 }
 
-#[derive(Component, Debug, PartialEq, Eq)]
-enum Object {
-    Ground,
-    Hammer,
-    Brick,
-}
-
 #[derive(Component, Debug)]
 struct Sprite;
 
@@ -57,6 +50,9 @@ struct ScoreText;
 
 #[derive(Component, Debug)]
 struct Resettable;
+
+#[derive(Component, Debug)]
+struct Breakable;
 
 #[derive(Debug, Default, PartialEq, Eq)]
 enum GameState {
@@ -176,7 +172,6 @@ fn setup_fixed(
 ) {
     commands
         .spawn(Collider::cuboid(450.0, 20.0))
-        .insert(Object::Ground)
         .insert(Restitution::coefficient(0.2))
         .insert(TransformBundle::from(Transform::from_xyz(0.0, -300.0, 0.0)))
         .insert(InheritedVisibility::VISIBLE)
@@ -197,17 +192,15 @@ fn setup_fixed(
 fn on_collision(
     mut commands: Commands,
     mut collision_events: EventReader<CollisionEvent>,
-    objects: Query<&Object>,
+    breakables: Query<&Breakable>,
     mut score: ResMut<Score>,
 ) {
     for collision_event in collision_events.read() {
         if let CollisionEvent::Stopped(e1, e2, _) = collision_event {
-            let n1 = objects.get(*e1);
-            let n2 = objects.get(*e2);
-            info!("collision: {n1:?} {n2:?}");
+            info!("collision: {e1:?} {e2:?}");
 
             for e in [e1, e2] {
-                if let Ok(Object::Brick) = objects.get(*e) {
+                if let Ok(Breakable) = breakables.get(*e) {
                     commands.entity(*e).despawn_recursive();
                     score.brick_broke();
                 }
@@ -232,10 +225,9 @@ fn on_click(
             let hammer = assets.load(Texture::HAMMER.path);
             commands
                 .spawn(RigidBody::Dynamic)
-                .insert(Object::Hammer)
+                .insert(Collider::cuboid(40.0, 40.0))
                 .insert(ColliderMassProperties::Density(2.0))
                 .insert(ColliderMassProperties::Mass(2.0))
-                .insert(Collider::cuboid(40.0, 40.0))
                 .insert(Restitution::coefficient(0.8))
                 .insert(TransformBundle::from(
                     Transform::from_xyz(point.x, point.y, 0.0)
@@ -258,7 +250,6 @@ fn on_click(
             let brick = assets.load(Texture::BRICK.path);
             commands
                 .spawn(Collider::cuboid(30.0, 30.0))
-                .insert(Object::Brick)
                 .insert(ColliderMassProperties::Density(1.0))
                 .insert(ColliderMassProperties::Mass(2.0))
                 .insert(Restitution::coefficient(0.2))
@@ -266,6 +257,7 @@ fn on_click(
                 .insert(TransformBundle::from(Transform::from_xyz(
                     point.x, point.y, 0.0,
                 )))
+                .insert(Breakable)
                 .insert(Resettable)
                 .with_children(|c| {
                     c.spawn(create_sprite(&brick));
