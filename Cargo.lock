@@ -2349,7 +2349,6 @@ name = "make-a-game"
 version = "0.1.0"
 dependencies = [
  "bevy",
- "bevy_math",
  "bevy_rapier2d",
  "derive_more",
  "rand",

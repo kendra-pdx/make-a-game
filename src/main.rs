@@ -1,3 +1,4 @@
+mod helpers;
 mod basic;
 mod physics;
 
@@ -8,7 +9,6 @@ use physics::Physics;
 fn create_camera(mut commands: Commands) {
     commands.spawn(Camera2dBundle::default());
 }
-
 
 fn draw_cursor(
     camera_query: Query<(&Camera, &GlobalTransform), With<Camera>>,
@@ -37,7 +37,7 @@ fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .add_plugins(BasicPlugin::new(false))
-        .add_plugins(Physics::new(true))
+        .add_plugins(Physics::new(true, false))
         .add_systems(Startup, create_camera)
         .add_systems(Update, draw_cursor)
         .run();
