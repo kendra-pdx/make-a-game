@@ -4,7 +4,7 @@ use bevy_rapier2d::prelude::*;
 use derive_more::Constructor;
 use rand::prelude::*;
 
-use std::{collections::HashMap, f32::consts::PI, sync::OnceLock};
+use std::f32::consts::PI;
 
 #[derive(Constructor)]
 pub struct Physics {
@@ -32,15 +32,14 @@ impl Plugin for Physics {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash)]
-enum Texture {
-    Brick,
-    Hammer,
+#[derive(Debug)]
+struct Texture {
+    path: &'static str,
 }
 
-#[derive(Constructor)]
-struct TextureInfo {
-    path: &'static str,
+impl Texture {
+    const BRICK: Texture = Texture { path: "brick.png" };
+    const HAMMER: Texture = Texture { path: "hammer.png" };
 }
 
 #[derive(Component, Debug, PartialEq, Eq)]
@@ -230,7 +229,7 @@ fn on_click(
         if let Some(point) = mouse_position(&camera_query, &windows) {
             info!("click at: {:?}", point);
             let mut rng = rand::thread_rng();
-            let hammer = get_texture(&assets, Texture::Hammer);
+            let hammer = assets.load(Texture::HAMMER.path);
             commands
                 .spawn(RigidBody::Dynamic)
                 .insert(Object::Hammer)
@@ -256,7 +255,7 @@ fn on_click(
     // spawn a brick
     if buttons.just_released(MouseButton::Right) && score.state == GameState::NewGame {
         if let Some(point) = mouse_position(&camera_query, &windows) {
-            let brick = get_texture(&assets, Texture::Brick);
+            let brick = assets.load(Texture::BRICK.path);
             commands
                 .spawn(Collider::cuboid(30.0, 30.0))
                 .insert(Object::Brick)
@@ -299,17 +298,4 @@ fn cull(mut commands: Commands, sprites: Query<(&Parent, &ViewVisibility), With<
             commands.entity(p.get()).despawn_recursive();
         }
     }
-}
-
-fn get_texture(assets: &Res<AssetServer>, texture: Texture) -> Handle<Image> {
-    static TEXTURES: OnceLock<HashMap<Texture, TextureInfo>> = OnceLock::new();
-    let textures = TEXTURES.get_or_init(|| {
-        vec![
-            (Texture::Brick, TextureInfo::new("brick.png")),
-            (Texture::Hammer, TextureInfo::new("hammer.png")),
-        ]
-        .into_iter()
-        .collect()
-    });
-    assets.load(textures[&texture].path)
 }
