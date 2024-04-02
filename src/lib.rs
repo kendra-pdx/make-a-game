@@ -1,5 +1,4 @@
 mod basic;
-mod helpers;
 mod physics;
 
 use basic::BasicPlugin;
@@ -14,25 +13,37 @@ fn create_camera(mut commands: Commands) {
     commands.spawn(Camera2dBundle::default());
 }
 
+pub fn mouse_position(
+    camera_query: &Query<(&Camera, &GlobalTransform), With<Camera>>,
+    windows: &Query<&Window>,
+) -> Option<Vec2> {
+    camera_query
+        .get_single()
+        .map_or(None, |(camera, camera_transform)| {
+            windows
+                .single()
+                .cursor_position()
+                .and_then(|cursor_position| {
+                    camera.viewport_to_world_2d(camera_transform, cursor_position)
+                })
+        })
+}
+
+pub fn create_sprite(handle: &Handle<Image>) -> SpriteBundle {
+    SpriteBundle {
+        texture: handle.clone(),
+        ..default()
+    }
+}
+
 fn draw_cursor(
     camera_query: Query<(&Camera, &GlobalTransform), With<Camera>>,
     windows: Query<&Window>,
     mut gizmos: Gizmos,
 ) {
-    let Ok((camera, camera_transform)) = camera_query.get_single() else {
-        return;
-    };
-
-    let Some(cursor_position) = windows.single().cursor_position() else {
-        return;
-    };
-
-    // Calculate a world position based on the cursor's position.
-    let Some(point) = camera.viewport_to_world_2d(camera_transform, cursor_position) else {
-        return;
-    };
-
-    gizmos.circle_2d(point, 10., Color::WHITE);
+    if let Some(point) = mouse_position(&camera_query, &windows) {
+        gizmos.circle_2d(point, 10., Color::WHITE);
+    }
 }
 
 #[wasm_bindgen]
