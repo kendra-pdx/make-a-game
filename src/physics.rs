@@ -212,13 +212,15 @@ fn on_collision(
 fn on_click(
     mut commands: Commands,
     buttons: Res<ButtonInput<MouseButton>>,
+    keys: Res<ButtonInput<KeyCode>>,
     assets: Res<AssetServer>,
     mut score: ResMut<Score>,
     camera_query: Query<(&Camera, &GlobalTransform), With<Camera>>,
     windows: Query<&Window>,
 ) {
     // spawn a hammer
-    if buttons.just_released(MouseButton::Left) && score.state != GameState::GameOver {
+    let make_hammer = buttons.just_released(MouseButton::Left) || keys.just_pressed(KeyCode::KeyA);
+    if make_hammer && score.state != GameState::GameOver {
         if let Some(point) = mouse_position(&camera_query, &windows) {
             info!("click at: {:?}", point);
             let mut rng = rand::thread_rng();
@@ -245,7 +247,8 @@ fn on_click(
     }
 
     // spawn a brick
-    if buttons.just_released(MouseButton::Right) && score.state == GameState::NewGame {
+    let make_brick = buttons.just_released(MouseButton::Right) || keys.just_pressed(KeyCode::KeyS);
+    if make_brick && score.state == GameState::NewGame {
         if let Some(point) = mouse_position(&camera_query, &windows) {
             let brick = assets.load(Texture::BRICK.path);
             commands

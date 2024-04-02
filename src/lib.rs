@@ -1,11 +1,14 @@
-mod helpers;
 mod basic;
+mod helpers;
 mod physics;
 
 use basic::BasicPlugin;
 use bevy::prelude::*;
 use physics::Physics;
 use wasm_bindgen::prelude::wasm_bindgen;
+
+#[cfg(target_arch = "wasm32")]
+use bevy::asset::AssetMetaCheck;
 
 fn create_camera(mut commands: Commands) {
     commands.spawn(Camera2dBundle::default());
@@ -34,8 +37,12 @@ fn draw_cursor(
 
 #[wasm_bindgen]
 pub fn start() {
-    App::new()
-        .add_plugins(DefaultPlugins)
+    let mut app = App::new();
+
+    #[cfg(target_arch = "wasm32")]
+    app.insert_resource(AssetMetaCheck::Never);
+
+    app.add_plugins(DefaultPlugins)
         .add_plugins(BasicPlugin::new(false))
         .add_plugins(Physics::new(true, false))
         .add_systems(Startup, create_camera)
